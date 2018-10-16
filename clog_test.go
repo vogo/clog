@@ -39,6 +39,12 @@ func TestClog(t *testing.T) {
 	Debug(ctx, "debug log, now it becomes visible")
 	assert.Contains(t, readBuf(buf), "debug log, now it becomes visible")
 
+	Logf(InfoLevel, "test-id", "hello %v %v", "world", "log")
+	log = readBuf(buf)
+	assert.Contains(t, log, "test-id")
+	assert.Contains(t, log, "hello world")
+	t.Log(log)
+
 	clog = NewClog()
 	clog.SetOutput(buf)
 
@@ -47,6 +53,7 @@ func TestClog(t *testing.T) {
 	log = readBuf(buf)
 	assert.Regexp(t, "WARN[ ]+\\[.*\\] log_content", log)
 	t.Log(log)
+
 }
 
 func TestReplacer(t *testing.T) {

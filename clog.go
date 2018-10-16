@@ -137,43 +137,48 @@ func (clog *Clog) formatOutput(level Level, ctxInfo, output string) string {
 		now, strings.ToUpper(level.String()), ctxInfo, output, file, line)
 }
 
-func (clog *Clog) logf(ctx context.Context, level Level, format string, args ...interface{}) {
+//Log write log to output,without checking level
+func (clog *Clog) Log(level Level, ctxInfo, output string) {
+	fmt.Fprintln(clog.output, clog.formatOutput(level, ctxInfo, output))
+}
+
+//Logf write format log to output,without checking level
+func (clog *Clog) Logf(level Level, ctxInfo, format string, args ...interface{}) {
+	clog.Log(level, ctxInfo, fmt.Sprintf(format, args...))
+}
+
+func (clog *Clog) levelContextLog(ctx context.Context, level Level, format string, args ...interface{}) {
 	if clog.level() < level {
 		return
 	}
 
 	ctxInfo := clog.ctxFmt(ctx)
-	clog.Log(level, ctxInfo, format, args...)
-}
-
-//Log write log to output,without checking level
-func (clog *Clog) Log(level Level, ctxInfo, format string, args ...interface{}) {
-	fmt.Fprintln(clog.output, clog.formatOutput(level, ctxInfo, fmt.Sprintf(format, args...)))
+	clog.Logf(level, ctxInfo, format, args...)
 }
 
 //Debug log
 func (clog *Clog) Debug(ctx context.Context, format string, args ...interface{}) {
-	clog.logf(ctx, DebugLevel, format, args...)
+	clog.levelContextLog(ctx, DebugLevel, format, args...)
 }
 
 //Info log
 func (clog *Clog) Info(ctx context.Context, format string, args ...interface{}) {
-	clog.logf(ctx, InfoLevel, format, args...)
+	clog.levelContextLog(ctx, InfoLevel, format, args...)
 }
 
 //Warn log
 func (clog *Clog) Warn(ctx context.Context, format string, args ...interface{}) {
-	clog.logf(ctx, WarnLevel, format, args...)
+	clog.levelContextLog(ctx, WarnLevel, format, args...)
 }
 
 //Error log
 func (clog *Clog) Error(ctx context.Context, format string, args ...interface{}) {
-	clog.logf(ctx, ErrorLevel, format, args...)
+	clog.levelContextLog(ctx, ErrorLevel, format, args...)
 }
 
 //Fatal log
 func (clog *Clog) Fatal(ctx context.Context, format string, args ...interface{}) {
-	clog.logf(ctx, FatalLevel, format, args...)
+	clog.levelContextLog(ctx, FatalLevel, format, args...)
 }
 
 //SetOutput set log output
@@ -219,6 +224,16 @@ func Error(ctx context.Context, format string, v ...interface{}) {
 //Fatal log
 func Fatal(ctx context.Context, format string, v ...interface{}) {
 	clog.Fatal(ctx, format, v...)
+}
+
+//Log write log
+func Log(level Level, ctxInfo, output string) {
+	clog.Log(level, ctxInfo, output)
+}
+
+//Logf write format log
+func Logf(level Level, ctxInfo, format string, args ...interface{}) {
+	clog.Logf(level, ctxInfo, format, args...)
 }
 
 //SetOutput set log output

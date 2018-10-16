@@ -10,6 +10,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -45,13 +46,16 @@ func TestLumberjack(t *testing.T) {
 
 	var key interface{}
 	key = KeyRequestID
-	ctx = context.WithValue(ctx, key, "hello")
-	Info(ctx, "log with context info")
+	ctx = context.WithValue(ctx, key, "test-id")
+	Info(ctx, "context info")
 
 	log, err := ioutil.ReadFile(file.Name())
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
+	content := string(log)
 	t.Log(string(log))
+	assert.Contains(t, content, "test-id")
+	assert.Contains(t, content, "context info")
 }
