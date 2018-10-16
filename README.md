@@ -17,11 +17,11 @@ Clog writes log to stdout default, you can write log to a rolling file:
 ```golang
 import	"gopkg.in/natefinch/lumberjack.v2"
 
-SetOutput(&lumberjack.Logger{
+clog.SetOutput(&lumberjack.Logger{
 	Filename:   file.Name(),
-	MaxSize:    10, // megabytes
-	MaxBackups: 3,
-	MaxAge:     30,    //days
-	Compress:   true, // disabled by default
+	MaxSize:    10,       // megabytes
+	MaxBackups: 3,        // backup number
+	MaxAge:     30,       // days
+	Compress:   true,     // disabled by default
 })
 ```
