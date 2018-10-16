@@ -33,6 +33,11 @@ const (
 
 var globalLogLevel = InfoLevel
 
+//GlobalLevel global log level
+func GlobalLevel() Level {
+	return globalLogLevel
+}
+
 func (level Level) String() string {
 	switch level {
 	case DebugLevel:
