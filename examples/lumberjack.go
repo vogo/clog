@@ -2,30 +2,31 @@
 // Use of this source code is governed by a Apache license
 // that can be found in the LICENSE file.
 
-package clog
+package main
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
-	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/vogo/clog"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+//KeyRequestID request id key
 const KeyRequestID = "rid"
 
-func TestLumberjack(t *testing.T) {
+func main() {
 	file, err := ioutil.TempFile("", "lumberjack_test_")
 	if err != nil {
 
-		t.Error("failed to create file")
-		t.FailNow()
+		fmt.Println("failed to create file")
+		return
 	}
 	defer os.Remove(file.Name())
-	t.Logf("temp log file %s", file.Name())
-	SetOutput(&lumberjack.Logger{
+	fmt.Printf("temp log file %s\n", file.Name())
+	clog.SetOutput(&lumberjack.Logger{
 		Filename:   file.Name(),
 		MaxSize:    1, // megabytes
 		MaxBackups: 3,
@@ -33,29 +34,30 @@ func TestLumberjack(t *testing.T) {
 		Compress:   true, // disabled by default
 	})
 
-	Info(nil, "test clog")
+	clog.Info(nil, "test clog")
+	clog.Log(clog.InfoLevel, "r123", "request receive")
+	clog.Log(clog.InfoLevel, "r123", "request process")
+	clog.Logf(clog.InfoLevel, "r123", "request response: %s", "hello")
 
-	SetContextFommatter(func(ctx context.Context) string {
+	clog.SetContextFommatter(func(ctx context.Context) string {
 		if s, ok := ctx.Value(KeyRequestID).(string); ok {
 			return s
 		}
 		return "--"
 	})
 	ctx := context.Background()
-	Warn(ctx, "cant get ctx info")
+	clog.Warn(ctx, "cant get ctx info")
 
 	var key interface{}
 	key = KeyRequestID
 	ctx = context.WithValue(ctx, key, "test-id")
-	Info(ctx, "context info")
+	clog.Info(ctx, "context info")
 
 	log, err := ioutil.ReadFile(file.Name())
 	if err != nil {
-		t.Error(err)
-		t.FailNow()
+		fmt.Println("failed to read log file content")
+		return
 	}
 	content := string(log)
-	t.Log(string(log))
-	assert.Contains(t, content, "test-id")
-	assert.Contains(t, content, "context info")
+	fmt.Println(content)
 }

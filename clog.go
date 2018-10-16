@@ -75,7 +75,6 @@ type Clog struct {
 	Level         Level
 	output        io.Writer
 	hideCallstack bool
-	depth         int
 	ctxFmt        ContextFormatter
 }
 
@@ -84,7 +83,6 @@ func NewClog() *Clog {
 	return &Clog{
 		Level:  globalLogLevel,
 		output: os.Stdout,
-		depth:  3,
 		ctxFmt: func(ctx context.Context) string {
 			return "-"
 		},
@@ -112,7 +110,7 @@ func (clog *Clog) SetContextFommatter(ctxFmt ContextFormatter) {
 var replacer = strings.NewReplacer("\r", "\\r", "\n", "\\n")
 
 // formatOutput format output
-func (clog *Clog) formatOutput(level Level, ctxInfo, output string) string {
+func (clog *Clog) formatOutput(level Level, ctxInfo, output string, callerDepth int) string {
 	now := time.Now().Format("20060102 15:04:05.99999")
 
 	output = replacer.Replace(output)
@@ -121,7 +119,7 @@ func (clog *Clog) formatOutput(level Level, ctxInfo, output string) string {
 		return fmt.Sprintf("%-25s %-5s [%s] %s",
 			now, strings.ToUpper(level.String()), ctxInfo, output)
 	}
-	_, file, line, ok := runtime.Caller(clog.depth)
+	_, file, line, ok := runtime.Caller(callerDepth)
 	if !ok {
 		file = "???"
 		line = 0
@@ -139,12 +137,12 @@ func (clog *Clog) formatOutput(level Level, ctxInfo, output string) string {
 
 //Log write log to output,without checking level
 func (clog *Clog) Log(level Level, ctxInfo, output string) {
-	fmt.Fprintln(clog.output, clog.formatOutput(level, ctxInfo, output))
+	fmt.Fprintln(clog.output, clog.formatOutput(level, ctxInfo, output, 3))
 }
 
 //Logf write format log to output,without checking level
 func (clog *Clog) Logf(level Level, ctxInfo, format string, args ...interface{}) {
-	clog.Log(level, ctxInfo, fmt.Sprintf(format, args...))
+	fmt.Fprintln(clog.output, clog.formatOutput(level, ctxInfo, fmt.Sprintf(format, args...), 3))
 }
 
 func (clog *Clog) levelContextLog(ctx context.Context, level Level, format string, args ...interface{}) {
@@ -153,7 +151,7 @@ func (clog *Clog) levelContextLog(ctx context.Context, level Level, format strin
 	}
 
 	ctxInfo := clog.ctxFmt(ctx)
-	clog.Logf(level, ctxInfo, format, args...)
+	fmt.Fprintln(clog.output, clog.formatOutput(level, ctxInfo, fmt.Sprintf(format, args...), 4))
 }
 
 //Debug log
@@ -193,13 +191,7 @@ func (clog *Clog) HideCallstack() *Clog {
 	return clog
 }
 
-//WithDepth set call stack depth
-func (clog *Clog) WithDepth(depth int) *Clog {
-	clog.depth = depth
-	return clog
-}
-
-var clog = NewClog().WithDepth(4)
+var clog = NewClog()
 
 //Info log
 func Info(ctx context.Context, format string, v ...interface{}) {
