@@ -19,8 +19,8 @@ import (
 type Level uint32
 
 const (
-	//CriticalLevel critical level
-	CriticalLevel Level = iota
+	//FatalLevel fatal level
+	FatalLevel Level = iota
 	//ErrorLevel error level
 	ErrorLevel
 	//WarnLevel warn level
@@ -43,8 +43,8 @@ func (level Level) String() string {
 		return "warn"
 	case ErrorLevel:
 		return "error"
-	case CriticalLevel:
-		return "critical"
+	case FatalLevel:
+		return "fatal"
 	}
 
 	return "unknown"
@@ -53,8 +53,8 @@ func (level Level) String() string {
 //StringToLevel parse string level
 func StringToLevel(level string) Level {
 	switch level {
-	case "critical":
-		return CriticalLevel
+	case "fatal":
+		return FatalLevel
 	case "error":
 		return ErrorLevel
 	case "warn", "warning":
@@ -164,9 +164,9 @@ func (clog *Clog) Error(ctx context.Context, format string, args ...interface{})
 	clog.logf(ctx, ErrorLevel, format, args...)
 }
 
-//Critical log
-func (clog *Clog) Critical(ctx context.Context, format string, args ...interface{}) {
-	clog.logf(ctx, CriticalLevel, format, args...)
+//Fatal log
+func (clog *Clog) Fatal(ctx context.Context, format string, args ...interface{}) {
+	clog.logf(ctx, FatalLevel, format, args...)
 }
 
 //SetOutput set log output
@@ -209,9 +209,9 @@ func Error(ctx context.Context, format string, v ...interface{}) {
 	clog.Error(ctx, format, v...)
 }
 
-//Critical log
-func Critical(ctx context.Context, format string, v ...interface{}) {
-	clog.Critical(ctx, format, v...)
+//Fatal log
+func Fatal(ctx context.Context, format string, v ...interface{}) {
+	clog.Fatal(ctx, format, v...)
 }
 
 //SetOutput set log output
