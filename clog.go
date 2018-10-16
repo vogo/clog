@@ -111,9 +111,9 @@ func (clog *Clog) SetContextFommatter(ctxFmt ContextFormatter) {
 
 var replacer = strings.NewReplacer("\r", "\\r", "\n", "\\n")
 
-func (clog *Clog) formatOutput(ctx context.Context, level Level, output string) string {
+// formatOutput format output
+func (clog *Clog) formatOutput(level Level, ctxInfo, output string) string {
 	now := time.Now().Format("20060102 15:04:05.99999")
-	ctxInfo := clog.ctxFmt(ctx)
 
 	output = replacer.Replace(output)
 
@@ -141,7 +141,14 @@ func (clog *Clog) logf(ctx context.Context, level Level, format string, args ...
 	if clog.level() < level {
 		return
 	}
-	fmt.Fprintln(clog.output, clog.formatOutput(ctx, level, fmt.Sprintf(format, args...)))
+
+	ctxInfo := clog.ctxFmt(ctx)
+	clog.Log(level, ctxInfo, format, args...)
+}
+
+//Log write log to output,without checking level
+func (clog *Clog) Log(level Level, ctxInfo, format string, args ...interface{}) {
+	fmt.Fprintln(clog.output, clog.formatOutput(level, ctxInfo, fmt.Sprintf(format, args...)))
 }
 
 //Debug log
