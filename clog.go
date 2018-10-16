@@ -112,7 +112,7 @@ func (clog *Clog) SetContextFommatter(ctxFmt ContextFormatter) {
 var replacer = strings.NewReplacer("\r", "\\r", "\n", "\\n")
 
 func (clog *Clog) formatOutput(ctx context.Context, level Level, output string) string {
-	now := time.Now().Format("2006-01-02 15:04:05.99999")
+	now := time.Now().Format("20060102 15:04:05.99999")
 	ctxInfo := clog.ctxFmt(ctx)
 
 	output = replacer.Replace(output)
