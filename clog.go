@@ -38,6 +38,11 @@ func GlobalLevel() Level {
 	return globalLogLevel
 }
 
+//DebugEnabled whether debug enabled
+func DebugEnabled() bool {
+	return globalLogLevel >= DebugLevel
+}
+
 func (level Level) String() string {
 	switch level {
 	case DebugLevel:
