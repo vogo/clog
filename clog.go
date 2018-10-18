@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync/atomic"
@@ -135,12 +136,7 @@ func (clog *Clog) formatOutput(level Level, ctxInfo, output string, callerDepth 
 		line = 0
 	}
 	// short file name
-	for i := len(file) - 1; i > 0; i-- {
-		if file[i] == '/' {
-			file = file[i+1:]
-			break
-		}
-	}
+	file = filepath.Base(file)
 	return fmt.Sprintf("%-25s %-5s [%s] %s (%s:%d)",
 		now, strings.ToUpper(level.String()), ctxInfo, output, file, line)
 }
