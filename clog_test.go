@@ -45,11 +45,11 @@ func TestClog(t *testing.T) {
 	assert.Contains(t, log, "hello world")
 	t.Log(log)
 
-	clog = NewClog()
-	clog.SetOutput(buf)
+	logger = NewClog()
+	logger.SetOutput(buf)
 
-	clog.HideCallstack()
-	clog.Warn(nil, "log_content")
+	logger.HideCallstack()
+	logger.Warn(nil, "log_content")
 	log = readBuf(buf)
 	assert.Regexp(t, "WARN[ ]+\\[.*\\] log_content", log)
 	t.Log(log)
