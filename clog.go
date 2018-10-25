@@ -9,77 +9,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
-	"runtime"
-	"strings"
 	"sync/atomic"
-	"time"
 )
-
-//Level log level
-type Level uint32
-
-const (
-	//FatalLevel fatal level
-	FatalLevel Level = iota
-	//ErrorLevel error level
-	ErrorLevel
-	//WarnLevel warn level
-	WarnLevel
-	//InfoLevel info level
-	InfoLevel
-	//DebugLevel debug level
-	DebugLevel
-)
-
-var globalLogLevel = InfoLevel
-
-//GlobalLevel global log level
-func GlobalLevel() Level {
-	return globalLogLevel
-}
-
-//DebugEnabled whether debug enabled
-func DebugEnabled() bool {
-	return globalLogLevel >= DebugLevel
-}
-
-func (level Level) String() string {
-	switch level {
-	case DebugLevel:
-		return "debug"
-	case InfoLevel:
-		return "info"
-	case WarnLevel:
-		return "warn"
-	case ErrorLevel:
-		return "error"
-	case FatalLevel:
-		return "fatal"
-	}
-
-	return "unknown"
-}
-
-//StringToLevel parse string level
-func StringToLevel(level string) Level {
-	switch level {
-	case "fatal":
-		return FatalLevel
-	case "error":
-		return ErrorLevel
-	case "warn", "warning":
-		return WarnLevel
-	case "debug":
-		return DebugLevel
-	case "info":
-		return InfoLevel
-	}
-	return InfoLevel
-}
-
-//ContextFormatter format a context to string
-type ContextFormatter func(ctx context.Context) string
 
 //Clog struct
 type Clog struct {
@@ -94,11 +25,11 @@ func NewClog() *Clog {
 	return &Clog{
 		Level:  globalLogLevel,
 		output: os.Stdout,
-		ctxFmt: func(ctx context.Context) string {
-			return "-"
-		},
+		ctxFmt: DefaultContextFormatter,
 	}
 }
+
+// clog level
 func (clog *Clog) level() Level {
 	return Level(atomic.LoadUint32((*uint32)(&clog.Level)))
 }
@@ -118,37 +49,14 @@ func (clog *Clog) SetContextFommatter(ctxFmt ContextFormatter) {
 	clog.ctxFmt = ctxFmt
 }
 
-var replacer = strings.NewReplacer("\r", "\\r", "\n", "\\n")
-
-// formatOutput format output
-func (clog *Clog) formatOutput(level Level, ctxInfo, output string, callerDepth int) string {
-	now := time.Now().Format("20060102 15:04:05.99999")
-
-	output = replacer.Replace(output)
-
-	if clog.hideCallstack {
-		return fmt.Sprintf("%-25s %-5s [%s] %s",
-			now, strings.ToUpper(level.String()), ctxInfo, output)
-	}
-	_, file, line, ok := runtime.Caller(callerDepth)
-	if !ok {
-		file = "???"
-		line = 0
-	}
-	// short file name
-	file = filepath.Base(file)
-	return fmt.Sprintf("%-25s %-5s [%s] %s (%s:%d)",
-		now, strings.ToUpper(level.String()), ctxInfo, output, file, line)
-}
-
 //Log write log to output,without checking level
 func (clog *Clog) Log(level Level, ctxInfo, output string) {
-	fmt.Fprintln(clog.output, clog.formatOutput(level, ctxInfo, output, 3))
+	fmt.Fprintln(clog.output, formatOutput(level, clog.hideCallstack, ctxInfo, output, 3))
 }
 
 //Logf write format log to output,without checking level
 func (clog *Clog) Logf(level Level, ctxInfo, format string, args ...interface{}) {
-	fmt.Fprintln(clog.output, clog.formatOutput(level, ctxInfo, fmt.Sprintf(format, args...), 3))
+	fmt.Fprintln(clog.output, formatOutput(level, clog.hideCallstack, ctxInfo, fmt.Sprintf(format, args...), 3))
 }
 
 func (clog *Clog) levelContextLog(ctx context.Context, level Level, format string, args ...interface{}) {
@@ -157,7 +65,7 @@ func (clog *Clog) levelContextLog(ctx context.Context, level Level, format strin
 	}
 
 	ctxInfo := clog.ctxFmt(ctx)
-	fmt.Fprintln(clog.output, clog.formatOutput(level, ctxInfo, fmt.Sprintf(format, args...), 4))
+	fmt.Fprintln(clog.output, formatOutput(level, clog.hideCallstack, ctxInfo, fmt.Sprintf(format, args...), 4))
 }
 
 //Debug log
